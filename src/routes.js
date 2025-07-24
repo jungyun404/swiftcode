@@ -3,6 +3,14 @@
 var util = require('util');
 var _ = require('lodash');
 var models = require('./models');
+var rateLimit = require('express-rate-limit');
+
+// Rate limiter middleware
+const createAccountLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: "Too many accounts created from this IP, please try again after 15 minutes"
+});
 
 /*
  * GET playnow.
@@ -104,13 +112,17 @@ exports.signup = function(req, res) {
  * POST create-account.
  */
 
-exports.createAccount = function(req, res) {
+exports.createAccount = [createAccountLimiter, function(req, res) {
     var reportError = function(msg) {
         req.flash('error', msg);
         return res.redirect('/signup');
     };
     var username = req.body.username,
         password = req.body.password;
+
+    if (typeof username !== 'string' || typeof password !== 'string') {
+        return reportError('Invalid input type.');
+    }
 
     if (!username || !password) {
         return reportError('Both username and password are required.');
@@ -137,7 +149,7 @@ exports.createAccount = function(req, res) {
             return reportError('That username is already in use.');
         }
     });
-};
+}];
 
 /*
  * GET admin page.

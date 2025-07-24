@@ -3,7 +3,7 @@
 
 var express = require('express');
 var io = require('socket.io');
-var http = require('http');
+var https = require('https'); // Changed from http to https
 var helmet = require('helmet');
 
 var path = require('path');
@@ -59,7 +59,7 @@ var SwiftCODE = function() {
      * Listen on the configured port and IP
      */
     self.listen = function() {
-        self.server = http.createServer(self.app);
+        self.server = https.createServer(self.app); // Changed from http.createServer to https.createServer
 
         // Socket.IO server needs to listen in the same block as the HTTP
         // server, or you'll get listen EACCES errors (due to Node's context
@@ -181,7 +181,8 @@ var SwiftCODE = function() {
                 store: self.sessionstore,
                 secret: self.config.sessionSecret,
                 cookie: {
-                    maxAge: 60 * 60 * 1000 // 1 hour
+                    maxAge: 60 * 60 * 1000, // 1 hour
+                    secure: true // Added secure attribute to cookies
                 }
             }));
             self.app.use(flash());
